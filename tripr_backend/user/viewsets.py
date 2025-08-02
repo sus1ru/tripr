@@ -30,7 +30,7 @@ class UserRegisterVS(CreateAPIView):
 
             serializer = self.serializer_class(data=request.data)
             if serializer.is_valid():
-                user = serializer.save(is_active=False, username=username)
+                user = serializer.save(username=username)
                 user.set_password(serializer.validated_data["password"])
                 user.save()
                 return Response(
