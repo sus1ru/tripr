@@ -1,0 +1,49 @@
+services:
+  backend:
+    build:
+      context: ./tripr_backend/
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ./tripr_backend:/code
+    env_file: .env
+    depends_on:
+      - pgdb
+    ports:
+      - 8100:8000
+    entrypoint: sh /code/entrypoint.sh
+    networks:
+      - tripr
+
+  pgdb:
+    image: postgis/postgis:16-3.5-alpine
+    restart: always
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data/
+    ports:
+      - 5462:5432
+    env_file: .env
+    healthcheck:
+      test: [ 'CMD', 'psql', '-U', 'postgres', '-c', 'SELECT 1' ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tripr
+
+  redis:
+    image: redis:alpine
+    restart: always
+    entrypoint: redis-server --appendonly yes
+    # ports:
+    #   - 6379:6379
+    volumes:
+      - ./redis_data:/var/lib/redis
+      - ./redis/rc.local:/etc/rc.local
+    networks:
+      - tripr
+
+networks:
+  tripr:
+    name: tripr
+    driver: bridge
